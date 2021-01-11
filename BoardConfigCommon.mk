@@ -103,8 +103,10 @@ TARGET_DISPLAY_USE_RETIRE_FENCE := true
 OVERRIDE_RS_DRIVER := libRSDriver_adreno.so
 TARGET_ADDITIONAL_GRALLOC_10_USAGE_BITS := 0x02000000U
 
-# camera HAL1
-TARGET_HAS_LEGACY_CAMERA_HAL1 := true
+# Camera
+TARGET_PROCESS_SDK_VERSION_OVERRIDE += \
+    /system/bin/mediaserver=23 \
+    /system/vendor/bin/mm-qcamera-daemon=23
 
 # Surfaceflinger optimization for VD surfaces
 TARGET_FORCE_HWC_FOR_VIRTUAL_DISPLAYS := true
