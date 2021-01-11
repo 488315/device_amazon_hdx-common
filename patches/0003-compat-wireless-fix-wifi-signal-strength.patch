@@ -1,0 +1,28 @@
+From ad4e6c7cffd88e4d46335785fe175280533b4bcf Mon Sep 17 00:00:00 2001
+From: Joel Bacchus <joel.bacchus@protonmail.com>
+Date: Mon, 11 Jan 2021 08:03:23 +0000
+Subject: [PATCH 1/1] compat-wireless: fix wifi signal strength
+
+Change-Id: I0d1aaf4cc3272e0b5e5b04e5d55d55a94e441545
+---
+ net/netlink_utils.cpp | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/net/netlink_utils.cpp b/net/netlink_utils.cpp
+index adaa37e..0d806b7 100644
+--- a/net/netlink_utils.cpp
++++ b/net/netlink_utils.cpp
+@@ -491,8 +491,8 @@ bool NetlinkUtils::GetStationInfo(uint32_t interface_index,
+     return false;
+   }
+   if (!sta_info.GetAttributeValue(NL80211_STA_INFO_TX_FAILED, &tx_bad)) {
+-    LOG(ERROR) << "Failed to get NL80211_STA_INFO_TX_FAILED";
+-    return false;
++    //LOG(ERROR) << "Failed to get NL80211_STA_INFO_TX_FAILED";
++    tx_bad = 0;
+   }
+   int8_t current_rssi;
+   if (!sta_info.GetAttributeValue(NL80211_STA_INFO_SIGNAL, &current_rssi)) {
+-- 
+2.25.1
+
