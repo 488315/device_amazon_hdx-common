@@ -138,8 +138,6 @@ on boot
     write /proc/sys/kernel/printk "6 6 1 7"
 
     # Load compat-wireless ath6kl-3.5_usb module
-    # TODO: first attempt always fails
-    insmod /vendor/lib/modules/wlan.ko
     insmod /vendor/lib/modules/wlan.ko
 
     # Wifi firmware reload path
