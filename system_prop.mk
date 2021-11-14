@@ -2,6 +2,11 @@
 # System Properties for HDX
 #
 
+# AptX
+PRODUCT_PROPERTY_OVERRIDES += \
+    persist.bt.enableAptXHD=true \
+    persist.service.btui.use_aptx=1
+
 # QC Perf
 ADDITIONAL_BUILD_PROPERTIES += \
 	ro.vendor.extension_library=/vendor/lib/libqc-opt.so
