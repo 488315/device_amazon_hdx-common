@@ -1,0 +1,85 @@
+From 3d8ee181d01693528ef59fcaaed4cfff6c6dc771 Mon Sep 17 00:00:00 2001
+From: ggow <9898181+ggow@users.noreply.github.com>
+Date: Sun, 14 Nov 2021 20:14:22 +0000
+Subject: [PATCH 1/1] display: fix power off animation for odd hardware
+ rotation
+
+Change-Id: Ia76444857db8c7240c1432787a50967c0aa92b21
+---
+ .../com/android/server/display/ColorFade.java | 60 +++++++++++++------
+ 1 file changed, 42 insertions(+), 18 deletions(-)
+
+diff --git a/services/core/java/com/android/server/display/ColorFade.java b/services/core/java/com/android/server/display/ColorFade.java
+index 7a5f5231869..093f3bc8d1c 100644
+--- a/services/core/java/com/android/server/display/ColorFade.java
++++ b/services/core/java/com/android/server/display/ColorFade.java
+@@ -761,24 +761,48 @@ final class ColorFade {
+                 }
+ 
+                 DisplayInfo displayInfo = mDisplayManagerInternal.getDisplayInfo(mDisplayId);
+-                switch (displayInfo.rotation) {
+-                    case Surface.ROTATION_0:
+-                        mSurfaceControl.setPosition(0, 0);
+-                        mSurfaceControl.setMatrix(1, 0, 0, 1);
+-                        break;
+-                    case Surface.ROTATION_90:
+-                        mSurfaceControl.setPosition(0, displayInfo.logicalHeight);
+-                        mSurfaceControl.setMatrix(0, -1, 1, 0);
+-                        break;
+-                    case Surface.ROTATION_180:
+-                        mSurfaceControl.setPosition(displayInfo.logicalWidth,
+-                                displayInfo.logicalHeight);
+-                        mSurfaceControl.setMatrix(-1, 0, 0, -1);
+-                        break;
+-                    case Surface.ROTATION_270:
+-                        mSurfaceControl.setPosition(displayInfo.logicalWidth, 0);
+-                        mSurfaceControl.setMatrix(0, 1, -1, 0);
+-                        break;
++                if ((SystemProperties.getInt("ro.sf.hwrotation", 0) == 270) ||
++                    (SystemProperties.getInt("ro.sf.hwrotation", 0) == 90)) {
++                    switch (displayInfo.rotation) {
++                        case Surface.ROTATION_0:
++                            mSurfaceControl.setPosition(0, 0);
++                            mSurfaceControl.setMatrix(0, 1, -1, 0);
++                            break;
++                        case Surface.ROTATION_90:
++                            mSurfaceControl.setPosition(displayInfo.logicalWidth, 0);
++                            mSurfaceControl.setMatrix(1, 0, 0, 1);
++                            break;
++                        case Surface.ROTATION_180:
++                            mSurfaceControl.setPosition(displayInfo.logicalWidth,
++                                    displayInfo.logicalHeight);
++                            mSurfaceControl.setMatrix(0, -1, 1, 0);
++                            break;
++                        case Surface.ROTATION_270:
++                            mSurfaceControl.setPosition(displayInfo.logicalWidth, 0);
++                            mSurfaceControl.setMatrix(-1, 0, 0, -1);
++                            break;
++                    }
++                }
++                else {
++                    switch (displayInfo.rotation) {
++                        case Surface.ROTATION_0:
++                            mSurfaceControl.setPosition(0, 0);
++                            mSurfaceControl.setMatrix(1, 0, 0, 1);
++                            break;
++                        case Surface.ROTATION_90:
++                            mSurfaceControl.setPosition(0, displayInfo.logicalHeight);
++                            mSurfaceControl.setMatrix(0, -1, 1, 0);
++                            break;
++                        case Surface.ROTATION_180:
++                            mSurfaceControl.setPosition(displayInfo.logicalWidth,
++                                    displayInfo.logicalHeight);
++                            mSurfaceControl.setMatrix(-1, 0, 0, -1);
++                            break;
++                        case Surface.ROTATION_270:
++                            mSurfaceControl.setPosition(displayInfo.logicalWidth, 0);
++                            mSurfaceControl.setMatrix(0, 1, -1, 0);
++                            break;
++                    }
+                 }
+             }
+         }
+-- 
+2.25.1
+

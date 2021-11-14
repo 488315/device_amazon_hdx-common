@@ -1,0 +1,247 @@
+From 415353b597395c28f9e590370697e7d5663a88fc Mon Sep 17 00:00:00 2001
+From: ggow <9898181+ggow@users.noreply.github.com>
+Date: Sun, 14 Nov 2021 18:41:40 +0000
+Subject: [PATCH 1/1] Revert "DO NOT MERGE Drop Bluetooth connection with weak
+ encryption key"
+
+This reverts commit fc2ca9ee6908cf6dcc7e4c6ea142354c99168d03.
+
+Change-Id: Ic36086432f0a22d54f490516e44b8f810d2dff0e
+---
+ device/src/controller.c     |   2 -
+ stack/btu/btu_hcif.c        | 106 +-----------------------------------
+ stack/hcic/hcicmds.c        |  16 ------
+ stack/include/btm_ble_api.h |  12 +---
+ stack/include/hcimsgs.h     |   1 -
+ 5 files changed, 4 insertions(+), 133 deletions(-)
+
+diff --git a/device/src/controller.c b/device/src/controller.c
+index 60820c2c..9433ff99 100644
+--- a/device/src/controller.c
++++ b/device/src/controller.c
+@@ -294,8 +294,6 @@ static future_t *start_up(void) {
+         &number_of_local_supported_codecs, local_supported_codecs);
+   }
+ 
+-  assert(HCI_READ_ENCR_KEY_SIZE_SUPPORTED(supported_commands));
+-
+   readable = true;
+   return future_new_immediate(FUTURE_SUCCESS);
+ }
+diff --git a/stack/btu/btu_hcif.c b/stack/btu/btu_hcif.c
+index eacf145b..5b618785 100644
+--- a/stack/btu/btu_hcif.c
++++ b/stack/btu/btu_hcif.c
+@@ -28,7 +28,6 @@
+ #define LOG_TAG "bt_btu_hcif"
+ 
+ #include <assert.h>
+-#include <log/log.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+@@ -607,73 +606,6 @@ static void btu_hcif_rmt_name_request_comp_evt (UINT8 *p, UINT16 evt_len)
+     btm_sec_rmt_name_request_complete (bd_addr, p, status);
+ }
+ 
+-const uint8_t MIN_KEY_SIZE = 7;
+-bool read_key_send_from_key_refresh = false;
+-
+-static void read_encryption_key_size_complete_after_key_refresh(
+-    uint8_t status, uint16_t handle, uint8_t key_size) {
+-  if (status == HCI_ERR_INSUFFCIENT_SECURITY) {
+-    /* If remote device stop the encryption before we call "Read Encryption Key
+-     * Size", we might receive Insufficient Security, which means that link is
+-     * no longer encrypted. */
+-    HCI_TRACE_WARNING("%s encryption stopped on link: 0x%02x", __func__,
+-                      handle);
+-    return;
+-  }
+-
+-  if (status != HCI_SUCCESS) {
+-    HCI_TRACE_WARNING("%s: disconnecting, status: 0x%02x", __func__, status);
+-    btsnd_hcic_disconnect(handle, HCI_ERR_PEER_USER);
+-    return;
+-  }
+-
+-  if (key_size < MIN_KEY_SIZE) {
+-    android_errorWriteLog(0x534e4554, "124301137");
+-    HCI_TRACE_ERROR(
+-        "%s encryption key too short, disconnecting. handle: 0x%02x, key_size: "
+-        "%d",
+-        __func__, handle, key_size);
+-
+-    btsnd_hcic_disconnect(handle, HCI_ERR_HOST_REJECT_SECURITY);
+-    return;
+-  }
+-
+-  btm_sec_encrypt_change(handle, status, 1 /* enc_enable */);
+-}
+-
+-static void read_encryption_key_size_complete_after_encryption_change(
+-    uint8_t status, uint16_t handle, uint8_t key_size) {
+-  if (status == HCI_ERR_INSUFFCIENT_SECURITY) {
+-    /* If remote device stop the encryption before we call "Read Encryption Key
+-     * Size", we might receive Insufficient Security, which means that link is
+-     * no longer encrypted. */
+-    HCI_TRACE_WARNING("%s encryption stopped on link: 0x%02x", __func__,
+-                      handle);
+-    return;
+-  }
+-
+-  if (status != HCI_SUCCESS) {
+-    HCI_TRACE_WARNING("%s: disconnecting, status: 0x%02x", __func__, status);
+-    btsnd_hcic_disconnect(handle, HCI_ERR_PEER_USER);
+-    return;
+-  }
+-
+-  if (key_size < MIN_KEY_SIZE) {
+-    android_errorWriteLog(0x534e4554, "124301137");
+-    HCI_TRACE_ERROR(
+-        "%s encryption key too short, disconnecting. handle: 0x%02x, key_size: "
+-        "%d",
+-        __func__, handle, key_size);
+-
+-    btsnd_hcic_disconnect(handle, HCI_ERR_HOST_REJECT_SECURITY);
+-    return;
+-  }
+-
+-  // good key size - succeed
+-  btm_acl_encrypt_change(handle, status, 1 /* enable */);
+-  btm_sec_encrypt_change(handle, status, 1 /* enable */);
+-}
+-
+ /*******************************************************************************
+ **
+ ** Function         btu_hcif_encryption_change_evt
+@@ -693,14 +625,8 @@ static void btu_hcif_encryption_change_evt (UINT8 *p)
+     STREAM_TO_UINT16 (handle, p);
+     STREAM_TO_UINT8  (encr_enable, p);
+ 
+-    if (status != HCI_SUCCESS || encr_enable == 0 ||
+-        BTM_IsBleConnection(handle)) {
+-        btm_acl_encrypt_change (handle, status, encr_enable);
+-        btm_sec_encrypt_change (handle, status, encr_enable);
+-    } else {
+-        read_key_send_from_key_refresh = false;
+-        btsnd_hcic_read_encryption_key_size(handle);
+-    }
++    btm_acl_encrypt_change (handle, status, encr_enable);
++    btm_sec_encrypt_change (handle, status, encr_enable);
+ }
+ 
+ /*******************************************************************************
+@@ -904,26 +830,6 @@ static void btu_hcif_hdl_command_complete (UINT16 opcode, UINT8 *p, UINT16 evt_l
+             btm_read_inq_tx_power_complete(p);
+             break;
+ 
+-        case HCI_READ_ENCR_KEY_SIZE: {
+-            UINT8 *pp = p;
+-
+-            UINT8   status;
+-            UINT16  handle;
+-            UINT8   key_size;
+-
+-            STREAM_TO_UINT8  (status, pp);
+-            STREAM_TO_UINT16 (handle, pp);
+-            STREAM_TO_UINT8  (key_size, pp);
+-
+-            if (read_key_send_from_key_refresh) {
+-                read_encryption_key_size_complete_after_encryption_change(status, handle, key_size);
+-            } else {
+-                read_encryption_key_size_complete_after_key_refresh(status, handle, key_size);
+-            }
+-
+-            }
+-            break;
+-
+ #if (BLE_INCLUDED == TRUE)
+ /* BLE Commands sComplete*/
+         case HCI_BLE_ADD_WHITE_LIST:
+@@ -1713,7 +1619,6 @@ static void btu_hcif_enhanced_flush_complete_evt (void)
+ ** BLE Events
+ ***********************************************/
+ #if (defined BLE_INCLUDED) && (BLE_INCLUDED == TRUE)
+-
+ static void btu_hcif_encryption_key_refresh_cmpl_evt (UINT8 *p)
+ {
+     UINT8   status;
+@@ -1725,12 +1630,7 @@ static void btu_hcif_encryption_key_refresh_cmpl_evt (UINT8 *p)
+ 
+     if (status == HCI_SUCCESS) enc_enable = 1;
+ 
+-    if (status != HCI_SUCCESS || BTM_IsBleConnection(handle)) {
+-        btm_sec_encrypt_change (handle, status, enc_enable);
+-    } else  {
+-        read_key_send_from_key_refresh = true;
+-        btsnd_hcic_read_encryption_key_size(handle);
+-    }
++    btm_sec_encrypt_change (handle, status, enc_enable);
+ }
+ 
+ static void btu_ble_process_adv_pkt (UINT8 *p)
+diff --git a/stack/hcic/hcicmds.c b/stack/hcic/hcicmds.c
+index ba1f6d4f..a3dae3ed 100644
+--- a/stack/hcic/hcicmds.c
++++ b/stack/hcic/hcicmds.c
+@@ -1371,22 +1371,6 @@ BOOLEAN btsnd_hcic_read_rssi (UINT16 handle)
+     return (TRUE);
+ }
+ 
+-BOOLEAN btsnd_hcic_read_encryption_key_size(UINT16 handle) {
+-    BT_HDR *p = (BT_HDR *)osi_malloc(HCI_CMD_BUF_SIZE);
+-    UINT8 *pp = (UINT8 *)(p + 1);
+-
+-    p->len    = HCIC_PREAMBLE_SIZE + HCIC_PARAM_SIZE_CMD_HANDLE;
+-    p->offset = 0;
+-
+-    UINT16_TO_STREAM (pp, HCI_READ_ENCR_KEY_SIZE);
+-    UINT8_TO_STREAM  (pp, HCIC_PARAM_SIZE_CMD_HANDLE);
+-
+-    UINT16_TO_STREAM (pp, handle);
+-
+-    btu_hcif_send_cmd (LOCAL_BR_EDR_CONTROLLER_ID,  p);
+-    return (TRUE);
+-}
+-
+ BOOLEAN btsnd_hcic_enable_test_mode (void)
+ {
+     BT_HDR *p = (BT_HDR *)osi_malloc(HCI_CMD_BUF_SIZE);
+diff --git a/stack/include/btm_ble_api.h b/stack/include/btm_ble_api.h
+index 0cc2e18a..412fa8ea 100644
+--- a/stack/include/btm_ble_api.h
++++ b/stack/include/btm_ble_api.h
+@@ -1304,17 +1304,7 @@ extern BOOLEAN BTM_BleVerifySignature (BD_ADDR bd_addr, UINT8 *p_orig,
+ extern void BTM_ReadConnectionAddr (BD_ADDR remote_bda, BD_ADDR local_conn_addr,
+                                             tBLE_ADDR_TYPE *p_addr_type);
+ 
+-/*******************************************************************************
+- *
+- * Function         BTM_IsBleConnection
+- *
+- * Description      This function is called to check if the connection handle
+- *                  for an LE link
+- *
+- * Returns          true if connection is LE link, otherwise false.
+- *
+- ******************************************************************************/
+-extern bool BTM_IsBleConnection(uint16_t conn_handle);
++
+ 
+ /*******************************************************************************
+ **
+diff --git a/stack/include/hcimsgs.h b/stack/include/hcimsgs.h
+index a79edc4b..e77c80cf 100644
+--- a/stack/include/hcimsgs.h
++++ b/stack/include/hcimsgs.h
+@@ -607,7 +607,6 @@ extern BOOLEAN btsnd_hcic_write_cur_iac_lap (UINT8 num_cur_iac,
+ 
+ extern BOOLEAN btsnd_hcic_get_link_quality (UINT16 handle);            /* Get Link Quality */
+ extern BOOLEAN btsnd_hcic_read_rssi (UINT16 handle);                   /* Read RSSI */
+-extern BOOLEAN btsnd_hcic_read_encryption_key_size (UINT16 handle);    /* Read encryption key size */
+ extern BOOLEAN btsnd_hcic_enable_test_mode (void);                     /* Enable Device Under Test Mode */
+ extern BOOLEAN btsnd_hcic_write_pagescan_type(UINT8 type);             /* Write Page Scan Type */
+ extern BOOLEAN btsnd_hcic_write_inqscan_type(UINT8 type);              /* Write Inquiry Scan Type */
+-- 
+2.25.1
+
