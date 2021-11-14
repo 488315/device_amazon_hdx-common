@@ -95,6 +95,11 @@ PRODUCT_PACKAGES += \
 	libqcomvoiceprocessing \
 	libqcomvoiceprocessingdescriptors
 
+# AptX
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/bluetooth/aptx/lib/libaptX_encoder.so:system/vendor/lib/libaptX_encoder.so \
+    $(LOCAL_PATH)/bluetooth/aptx/lib/libaptXHD_encoder.so:system/vendor/lib/libaptXHD_encoder.so
+    
 # Media Config Files
 PRODUCT_COPY_FILES += \
 	$(LOCAL_PATH)/media/media_profiles.xml:system/etc/media_profiles.xml \
