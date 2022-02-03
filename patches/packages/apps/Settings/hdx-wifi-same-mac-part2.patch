@@ -1,0 +1,21 @@
+diff --git a/src/com/android/settings/wifi/WifiSettings.java b/src/com/android/settings/wifi/WifiSettings.java
+index db0c7930fe..c90e94fdaf 100644
+--- a/src/com/android/settings/wifi/WifiSettings.java
++++ b/src/com/android/settings/wifi/WifiSettings.java
+@@ -658,9 +658,13 @@ public class WifiSettings extends RestrictedSettingsFragment
+                 for (AccessPoint accessPoint : accessPoints) {
+                     // Ignore access points that are out of range.
+                     if (accessPoint.getLevel() != -1) {
+-                        String key = accessPoint.getBssid();
+-                        if (TextUtils.isEmpty(key)) {
+-                            key = accessPoint.getSsidStr();
++                        String bssid = accessPoint.getBssid();
++                        String ssid = accessPoint.getSsidStr();
++                        String key;
++                        if (TextUtils.isEmpty(bssid)) {
++                            key = ssid;
++                        } else {
++                            key = bssid + " " + ssid;
+                         }
+                         hasAvailableAccessPoints = true;
+                         LongPressAccessPointPreference pref = (LongPressAccessPointPreference)

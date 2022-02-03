@@ -1,0 +1,15 @@
+diff --git a/service/java/com/android/server/wifi/scanner/SupplicantWifiScannerImpl.java b/service/java/com/android/server/wifi/scanner/SupplicantWifiScannerImpl.java
+index ac5db5a4..c4d07b19 100644
+--- a/service/java/com/android/server/wifi/scanner/SupplicantWifiScannerImpl.java
++++ b/service/java/com/android/server/wifi/scanner/SupplicantWifiScannerImpl.java
+@@ -556,7 +556,9 @@ public class SupplicantWifiScannerImpl extends WifiScannerImpl implements Handle
+             for (int i = 0; i < nativeResults.size(); ++i) {
+                 ScanResult result = nativeResults.get(i).getScanResult();
+                 long timestamp_ms = result.timestamp / 1000; // convert us -> ms
+-                if (timestamp_ms > mLastScanSettings.startTime) {
++                //Comparing time of device vs AP is very bad idea
++                //if (timestamp_ms > mLastScanSettings.startTime) {
++                if (true) {
+                     if (mLastScanSettings.backgroundScanActive) {
+                         backgroundScanResults.add(result);
+                     }

@@ -1,0 +1,40 @@
+diff --git a/packages/SettingsLib/src/com/android/settingslib/wifi/WifiTracker.java b/packages/SettingsLib/src/com/android/settingslib/wifi/WifiTracker.java
+index 7a103dda58d..2874f02d9fa 100644
+--- a/packages/SettingsLib/src/com/android/settingslib/wifi/WifiTracker.java
++++ b/packages/SettingsLib/src/com/android/settingslib/wifi/WifiTracker.java
+@@ -82,7 +82,7 @@ public class WifiTracker {
+     private boolean mSavedNetworksExist;
+     private boolean mRegistered;
+     private ArrayList<AccessPoint> mAccessPoints = new ArrayList<>();
+-    private HashMap<String, Integer> mSeenBssids = new HashMap<>();
++    private HashMap<String, Integer> mSeenAccessPoints = new HashMap<>();
+     private HashMap<String, ScanResult> mScanResultCache = new HashMap<>();
+     private Integer mScanId = 0;
+     private static final int NUM_SCANS_TO_CONFIRM_AP_LOSS = 3;
+@@ -269,7 +269,7 @@ public class WifiTracker {
+ 
+     private void handleResume() {
+         mScanResultCache.clear();
+-        mSeenBssids.clear();
++        mSeenAccessPoints.clear();
+         mScanId = 0;
+     }
+ 
+@@ -280,14 +280,14 @@ public class WifiTracker {
+             if (newResult.SSID == null || newResult.SSID.isEmpty()) {
+                 continue;
+             }
+-            mScanResultCache.put(newResult.BSSID, newResult);
+-            mSeenBssids.put(newResult.BSSID, mScanId);
++            mScanResultCache.put(newResult.BSSID + " " + newResult.SSID, newResult);
++            mSeenAccessPoints.put(newResult.BSSID + " " + newResult.SSID, mScanId);
+         }
+ 
+         if (mScanId > NUM_SCANS_TO_CONFIRM_AP_LOSS) {
+             if (DBG) Log.d(TAG, "------ Dumping SSIDs that were expired on this scan ------");
+             Integer threshold = mScanId - NUM_SCANS_TO_CONFIRM_AP_LOSS;
+-            for (Iterator<Map.Entry<String, Integer>> it = mSeenBssids.entrySet().iterator();
++            for (Iterator<Map.Entry<String, Integer>> it = mSeenAccessPoints.entrySet().iterator();
+                     it.hasNext(); /* nothing */) {
+                 Map.Entry<String, Integer> e = it.next();
+                 if (e.getValue() < threshold) {
