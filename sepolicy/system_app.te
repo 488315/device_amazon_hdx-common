@@ -10,3 +10,6 @@ allow system_app kcal_sysfs:file rw_file_perms;
 
 # init
 allow system_app shell_data_file:dir { search };
+
+allow system_app netd:binder call;
+allow system_app netd_service:service_manager find;

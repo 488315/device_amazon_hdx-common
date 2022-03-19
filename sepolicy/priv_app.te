@@ -1,0 +1,16 @@
+allow priv_app adbsecure_prop:file { getattr open };
+allow priv_app adbtcp_prop:file { getattr open };
+allow priv_app boot_mode_prop:file { getattr open };
+allow priv_app debugfs:file { getattr open read };
+allow priv_app default_prop:property_service set;
+allow priv_app device:dir { open read };
+allow priv_app init:unix_stream_socket connectto;
+allow priv_app mpdecision_prop:file { getattr open };
+allow priv_app property_socket:sock_file { write setattr append unlink link rename };
+allow priv_app recovery_prop:file { getattr open };
+allow priv_app sensors_prop:file { getattr open };
+allow priv_app spcomlib_prop:file open;
+allow priv_app sys_usb_configfs_prop:file { getattr open };
+allow priv_app sys_usb_controller_prop:file { getattr open };
+allow priv_app sys_usb_tethering_prop:file { getattr open };
+allow priv_app userinit_prop:file { getattr open };

@@ -1,1 +1,5 @@
 allow rild self:process execmem;
+allow rild device:chr_file { getattr ioctl open read write };
+allow rild sysfs:file write;
+allow rild sysfs_startril:dir search;
+allow rild system_file:file execmod;
