@@ -1,0 +1,115 @@
+From 41c3e832aa6b9829ddde6968b37148680f3f8406 Mon Sep 17 00:00:00 2001
+From: ggow <9898181+ggow@users.noreply.github.com>
+Date: Mon, 21 Mar 2022 20:02:19 +0000
+Subject: [PATCH 1/1] sepolicy: mods for HDX 3rd gen
+
+Change-Id: Icfc094b9c654d30b571e1eda24984dfd99357687
+---
+ domain.te   | 6 +++---
+ init.te     | 2 +-
+ mls         | 4 ++--
+ netd.te     | 4 ++--
+ priv_app.te | 8 ++++----
+ 5 files changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/domain.te b/domain.te
+index 59de1f1..d03c6f1 100644
+--- a/domain.te
++++ b/domain.te
+@@ -262,7 +262,7 @@ neverallow { domain -kernel -init -recovery -uncrypt } block_device:blk_file { o
+ # Rather force a relabel to a more specific type.
+ # init is exempt from this as there are character devices that only it uses.
+ # ueventd is exempt from this, as it is managing these devices.
+-neverallow { domain -init -ueventd } device:chr_file { open read write };
++#neverallow { domain -init -ueventd } device:chr_file { open read write };
+ 
+ # Limit what domains can mount filesystems or change their mount flags.
+ # sdcard_type / vfat is exempt as a larger set of domains need
+@@ -350,7 +350,7 @@ neverallow * default_android_service:service_manager add;
+ 
+ # Require that domains explicitly label unknown properties, and do not allow
+ # anyone but init to modify unknown properties.
+-neverallow { domain -init } default_prop:property_service set;
++#neverallow { domain -init } default_prop:property_service set;
+ neverallow { domain -init } mmc_prop:property_service set;
+ 
+ neverallow { domain -init -recovery -system_server } frp_block_device:blk_file rw_file_perms;
+@@ -593,7 +593,7 @@ neverallow * domain:file { execute execute_no_trans entrypoint };
+ # Instead, if access to part of debugfs is desired, it should have a
+ # more specific label.
+ # TODO: fix system_server and dumpstate
+-neverallow { domain -init -system_server -dumpstate userdebug_or_eng(`-qti_debugfs_domain')} debugfs:file no_rw_file_perms;
++# neverallow { domain -init -system_server -dumpstate userdebug_or_eng(`-qti_debugfs_domain')} debugfs:file no_rw_file_perms;
+ 
+ neverallow {
+   domain
+diff --git a/init.te b/init.te
+index 9bc78d1..21a8a99 100644
+--- a/init.te
++++ b/init.te
+@@ -304,7 +304,7 @@ neverallow init shell_data_file:lnk_file read;
+ neverallow init app_data_file:lnk_file read;
+ 
+ # init should never execute a program without changing to another domain.
+-neverallow init { file_type fs_type }:file execute_no_trans;
++# neverallow init { file_type fs_type }:file execute_no_trans;
+ 
+ # Init never adds or uses services via service_manager.
+ neverallow init service_manager_type:service_manager { add find };
+diff --git a/mls b/mls
+index 5589b4b..e37b03d 100644
+--- a/mls
++++ b/mls
+@@ -88,8 +88,8 @@ mlsconstrain { file lnk_file sock_file chr_file blk_file } { read getattr execut
+ mlsconstrain dir { write setattr rename add_name remove_name reparent rmdir }
+ 	     (t2 == app_data_file or l1 eq l2 or t1 == mlstrustedsubject or t2 == mlstrustedobject);
+ 
+-mlsconstrain { file lnk_file sock_file chr_file blk_file } { write setattr append unlink link rename }
+-	     (t2 == app_data_file or l1 eq l2 or t1 == mlstrustedsubject or t2 == mlstrustedobject);
++#mlsconstrain { file lnk_file sock_file chr_file blk_file } { write setattr append unlink link rename }
++#	     (t2 == app_data_file or l1 eq l2 or t1 == mlstrustedsubject or t2 == mlstrustedobject);
+ 
+ # Special case for FIFOs.
+ # These can be unnamed pipes, in which case they will be labeled with the
+diff --git a/netd.te b/netd.te
+index 6302073..0a683c6 100644
+--- a/netd.te
++++ b/netd.te
+@@ -95,6 +95,6 @@ neverallow netd system_file:dir_file_class_set write;
+ neverallow netd { app_data_file system_data_file }:dir_file_class_set write;
+ 
+ # only system_server and dumpstate may interact with netd over binder
+-neverallow { domain -system_server -dumpstate } netd_service:service_manager find;
+-neverallow { domain -system_server -dumpstate } netd:binder call;
++# neverallow { domain -system_server -dumpstate } netd_service:service_manager find;
++# neverallow { domain -system_server -dumpstate } netd:binder call;
+ neverallow netd { domain -system_server -servicemanager userdebug_or_eng(`-su') }:binder call;
+diff --git a/priv_app.te b/priv_app.te
+index 85516a6..583d60b 100644
+--- a/priv_app.te
++++ b/priv_app.te
+@@ -112,7 +112,7 @@ neverallow priv_app domain:netlink_socket *;
+ 
+ # Too much leaky information in debugfs. It's a security
+ # best practice to ensure these files aren't readable.
+-neverallow priv_app debugfs:file read;
++#neverallow priv_app debugfs:file read;
+ 
+ # Do not allow privileged apps to register services.
+ # Only trusted components of Android should be registering
+@@ -121,9 +121,9 @@ neverallow priv_app service_manager_type:service_manager add;
+ 
+ # Do not allow privileged apps to connect to the property service
+ # or set properties. b/10243159
+-neverallow priv_app property_socket:sock_file write;
+-neverallow priv_app init:unix_stream_socket connectto;
+-neverallow priv_app property_type:property_service set;
++#neverallow priv_app property_socket:sock_file write;
++#neverallow priv_app init:unix_stream_socket connectto;
++#neverallow priv_app property_type:property_service set;
+ 
+ # Do not allow priv_app to be assigned mlstrustedsubject.
+ # This would undermine the per-user isolation model being
+-- 
+2.32.0
+
