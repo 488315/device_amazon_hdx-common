@@ -56,7 +56,8 @@ LINKER_FORCED_SHIM_LIBS := \
     /system/vendor/lib/lib-imsdpl.so|libshim_libcrypto.so \
     /system/vendor/bin/mpdecision|libshim_atomic.so \
     /system/lib/libgui.so|libshim_libgui.so \
-    /system/vendor/bin/xtwifi-client|libshim_libcrypto.so
+    /system/vendor/bin/xtwifi-client|libshim_libcrypto.so \
+    /system/vendor/lib/libwvm.so|libshim_libwvm.so
 
 # QCOM hardware
 BOARD_USES_QCOM_HARDWARE := true
