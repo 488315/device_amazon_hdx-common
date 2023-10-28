@@ -38,6 +38,7 @@ PRODUCT_COPY_FILES += \
 PRODUCT_PACKAGES += \
 	check_prov.sh \
 	fstab.qcom \
+	fstab.qcom_first_stage \
 	init.qcom.rc \
 	init.qcom.usb.rc \
 	init.class_main.sh \
