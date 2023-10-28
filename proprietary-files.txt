@@ -340,7 +340,6 @@ vendor/lib/libxml.so
 bin/ATFWD-daemon:vendor/bin/ATFWD-daemon
 bin/bridgemgrd:vendor/bin/bridgemgrd
 bin/dun-server:vendor/bin/dun-server
-bin/netmgrd:vendor/bin/netmgrd
 bin/port-bridge:vendor/bin/port-bridge
 bin/qmuxd:vendor/bin/qmuxd
 bin/rmt_storage:vendor/bin/rmt_storage
@@ -350,7 +349,6 @@ bin/wan_savelog:vendor/bin/wan_savelog
 bin/wan_start:vendor/bin/wan_start
 lib/libril-lab126qmi.so:vendor/lib/libril-lab126qmi.so
 vendor/lib/libCommandSvc.so
-vendor/lib/libnetmgr.so
 
 # Security
 vendor/lib/libtzplayready.so
