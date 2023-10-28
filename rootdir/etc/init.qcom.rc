@@ -789,7 +789,7 @@ service ath6kl-service /vendor/bin/ath6kl-service
     user root
     oneshot
 
-service trigger_prov /system/bin/sh /sbin/check_prov.sh
+service trigger_prov /system/bin/sh /vendor/etc/init/hw/check_prov.sh
     class late_start
     user root
     oneshot

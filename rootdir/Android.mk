@@ -5,7 +5,7 @@ LOCAL_MODULE       := check_prov.sh
 LOCAL_MODULE_TAGS  := optional
 LOCAL_MODULE_CLASS := ETC
 LOCAL_SRC_FILES    := bin/check_prov.sh
-LOCAL_MODULE_PATH  := $(TARGET_ROOT_OUT_SBIN)
+LOCAL_MODULE_PATH  := $(TARGET_OUT_VENDOR_ETC)/init/hw
 include $(BUILD_PREBUILT)
 
 include $(CLEAR_VARS)
